@@ -20,19 +20,22 @@ jobs:
 
       # Step 3: Save image as tar
       - name: Save Docker image to tarball
-        run: docker save -o voting-app.tar voting-app:latest
+        run: |
+          mkdir -p /tmp/artifacts
+          docker save -o /tmp/artifacts/voting-app.tar voting-app:latest
+          ls -lh /tmp/artifacts
 
-      # Step 4: Copy image to EC2 (use stable version)
+      # Step 4: Copy image to EC2
       - name: Copy Docker image to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "voting-app.tar"
+          source: "/tmp/artifacts/voting-app.tar"
           target: "/home/${{ secrets.EC2_USER }}/"
 
-      # Step 5: Setup Docker + Deploy container on EC2 (stable SSH action)
+      # Step 5: Setup Docker + Deploy container on EC2
       - name: Setup Docker and Deploy on EC2
         uses: appleboy/ssh-action@v0.1.10
         with:
