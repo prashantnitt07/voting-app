@@ -22,9 +22,9 @@ jobs:
       - name: Save Docker image to tarball
         run: docker save -o voting-app.tar voting-app:latest
 
-      # Step 4: Copy image to EC2
+      # Step 4: Copy image to EC2 (use stable version)
       - name: Copy Docker image to EC2
-        uses: appleboy/scp-action@v0.1.8
+        uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
@@ -32,9 +32,9 @@ jobs:
           source: "voting-app.tar"
           target: "/home/${{ secrets.EC2_USER }}/"
 
-      # Step 5: Setup Docker + Deploy container on EC2
+      # Step 5: Setup Docker + Deploy container on EC2 (stable SSH action)
       - name: Setup Docker and Deploy on EC2
-        uses: appleboy/ssh-action@v0.1.8
+        uses: appleboy/ssh-action@v0.1.10
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
