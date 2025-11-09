@@ -19,11 +19,12 @@ jobs:
         run: |
           docker build -t voting-app:latest .
 
-      # Step 3: Save image as tar (ensure permissions + verify file)
+      # Step 3: Save image as tar and fix permissions
       - name: Save Docker image to tarball
         run: |
           sudo docker save -o voting-app.tar voting-app:latest
-          ls -lh voting-app.tar
+          sudo chmod 644 voting-app.tar   # 🔑 key fix — make readable for all users
+          ls -l voting-app.tar
 
       # Step 4: Verify file exists
       - name: Check tar file
@@ -33,7 +34,7 @@ jobs:
             exit 1
           fi
 
-      # Step 5: Copy image to EC2 using scp
+      # Step 5: Copy image to EC2 (scp)
       - name: Copy Docker image to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -43,7 +44,7 @@ jobs:
           source: "voting-app.tar"
           target: "/home/${{ secrets.EC2_USER }}/"
 
-      # Step 6: Deploy container on EC2 (install Docker + systemctl service)
+      # Step 6: Deploy container on EC2
       - name: Deploy on EC2
         uses: appleboy/ssh-action@v0.1.7
         with:
@@ -52,6 +53,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             set -e
+
             echo "🛠️ Installing Docker if missing..."
             if ! command -v docker &> /dev/null
             then
@@ -66,7 +68,7 @@ jobs:
             echo "📦 Loading Docker image..."
             sudo docker load -i voting-app.tar
 
-            echo "🧹 Stopping old container if exists..."
+            echo "🧹 Stopping old container..."
             sudo docker stop voting-app || true
             sudo docker rm voting-app || true
 
